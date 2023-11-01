@@ -1,0 +1,13 @@
+[
+    {
+       "model":"jwt_auth.subscription",
+       "pk":1,
+       "fields":{
+            "name":"free-tier",
+            "credit":1000,
+            "price":"0.00",
+            "created_at": "2023-04-11T10:00:00Z",
+            "updated_at": "2023-04-11T10:00:00Z"
+       }
+    }
+ ]

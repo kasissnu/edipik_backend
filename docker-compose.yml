@@ -1,0 +1,72 @@
+version: '3.1'
+
+services:
+  app:
+    restart: unless-stopped
+    networks:
+      - external
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: 'photoeditingai'
+    env_file: .env.docker
+    ports:
+      - 8000:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+      - db
+
+  db:
+    container_name: db
+    networks:
+      - external
+    image: mysql:8.0.21
+    ports:
+      - '3307:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: photo_editing_ai_data
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    restart: always
+
+  redis:
+    container_name: redis
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    restart: always
+    networks:
+      - external
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
+  celery_worker:
+    container_name: celery_worker
+
+    build:
+      context: ./
+      dockerfile: Dockerfile.celery
+    environment:
+      BROKER_URL: redis://redis:6379/0
+      MYSQL_HOST: db
+      MYSQL_DATABASE: photo_editing_ai_data
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_PORT: 3306
+    networks:
+      - external
+    command: celery -A photo_editing_ai worker -l debug
+    links:
+      - redis
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+
+networks:
+  external:
+    driver: bridge
