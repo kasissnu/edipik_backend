@@ -22,26 +22,29 @@ from os.path import splitext, split, basename, join, exists
 import shutil
 from datetime import datetime
 import pickle
-from .imresize import imresize
-
+from bridge_ai_bucket.ai_image_editing.WBAugmenter import imresize as resize
 
 class WBEmulator:
   def __init__(self):
+   
     # training encoded features
-    self.features = np.load('params/features.npy')
+    base_path = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), '../'))
+ 
+    self.features = np.load(base_path + '/params/features.npy')
+  
     # mapping functions to emulate WB effects
-    self.mappingFuncs = np.load('params/mappingFuncs.npy')
+    self.mappingFuncs = np.load(base_path + '/params/mappingFuncs.npy')
     # weight matrix for histogram encoding
-    self.encoderWeights = np.load('params/encoderWeights.npy')
+    self.encoderWeights = np.load(base_path + '/params/encoderWeights.npy')
     # bias vector for histogram encoding
-    self.encoderBias = np.load('params/encoderBias.npy')
+    self.encoderBias = np.load(base_path + '/params/encoderBias.npy')
     self.h = 60  # histogram bin width
     self.K = 25  # K value for nearest neighbor searching
     self.sigma = 0.25  # fall off factor for KNN
     # WB & photo finishing styles
-    self.wb_photo_finishing = ['_F_AS', '_F_CS', '_S_AS', '_S_CS',
-                               '_T_AS', '_T_CS', '_C_AS', '_C_CS',
-                               '_D_AS', '_D_CS']
+    self.wb_photo_finishing = ['_T_AS']
+ 
 
   def encode(self, hist):
     """Generates a compacted feature of a given RGB-uv histogram tensor."""
@@ -64,7 +67,7 @@ class WBEmulator:
       factor = np.sqrt(202500 / (sz[0] * sz[1]))  # rescale factor
       newH = int(np.floor(sz[0] * factor))
       newW = int(np.floor(sz[1] * factor))
-      I = imresize(I, output_shape=(newW, newH))
+      I = resize.imresize(I, output_shape=(newW, newH))
     I_reshaped = I[(I > 0).all(axis=2)]
     eps = 6.4 / self.h
     A = np.arange(-3.2, 3.19, eps)  # dummy vector
@@ -207,19 +210,20 @@ class WBEmulator:
                               write_original=1):
     """Applies the WB emulator to a single image in_img."""
     assert (outNum <= 10)
-    print("processing image: " + in_img + "\n")
+
     filename, file_extension = os.path.splitext(in_img)  # get file parts
     I = Image.open(in_img)  # read the image
     # generate new images with different WB settings
     outImgs, wb_pf = self.generateWbsRGB(I, outNum)
     for i in range(outNum):  # save images
       outImg = outImgs[i]  # get the ith output image
-      outImg.save(out_dir + '/' + os.path.basename(filename) +
-                  wb_pf[i] + file_extension)  # save it
+      out_dir_path = out_dir + '/' + os.path.basename(filename) + wb_pf[i] + file_extension
+      outImg.save(out_dir_path)  # save it
       if write_original == 1:
         I.save(out_dir + '/' + os.path.basename(filename) +
                '_original' + file_extension)
-
+    return out_dir_path
+  
   def batch_processing(self, in_dir, out_dir="../results", outNum=10,
                        write_original=1):
     """Applies the WB emulator to all images in a given directory in_dir."""
@@ -230,7 +234,7 @@ class WBEmulator:
       if f.lower().endswith(valid_images):
         imgfiles.append(os.path.join(in_dir, f))
     for in_img in imgfiles:
-      print("processing image: " + in_img + "\n")
+
       filename, file_extension = os.path.splitext(in_img)
       I = Image.open(in_img)
       outImgs, wb_pf = self.generateWbsRGB(I, outNum)
@@ -261,7 +265,7 @@ class WBEmulator:
                                   gt_ext))
 
     for in_img, gtfile in zip(imgfiles, gtfiles):
-      print("processing image: " + in_img + "\n")
+    
       filename, file_extension = os.path.splitext(in_img)
       gtbasename, gt_extension = os.path.splitext(gtfile)
       gtbasename = os.path.basename(gtbasename)

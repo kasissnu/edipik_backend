@@ -41,13 +41,20 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "127.0.0.1:3000",
     "0.0.0.0",
-    "127.0.0.1:8080"
+    "127.0.0.1:8080",
+    "edipik.com",
+    "api.edipik.com",
+    "www.edipik.com"
 ]
 
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8080",
+    "http://edipik.com",
+    "https://edipik.com",
+    "http://api.edipik.com",
+    "https://api.edipik.com",
 ]
 
 

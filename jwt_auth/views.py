@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from rest_framework.response import Response
 from rest_framework import generics, permissions, status
-from .serializers import UserForgotPasswordSerializer, UserPasswordResetSerializer, UserRegistrationSerializer
+from .serializers import UserForgotPasswordSerializer, UserPasswordResetSerializer, UserRegistrationSerializer, WaitingListSerializer
 from email_service.serializers import EmailServiceSerializer, EmailSerializer
 from email_service.services import send_email_and_generate_token
 from django.contrib.auth import authenticate, get_user_model
@@ -10,6 +10,7 @@ from rest_framework.exceptions import (
     AuthenticationFailed,
     NotFound,
     ParseError,
+    bad_request
 )
 from . import services
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -19,6 +20,13 @@ from rest_framework.serializers import ValidationError
 import json
 from django.core import serializers
 from rest_framework import serializers as drf_serializers
+from .models import WaitingList
+import re
+from django.conf import settings
+from django.core.mail import send_mail
+from django.core.validators import EmailValidator
+
+
 # Create your views here.
 
 User = get_user_model()
@@ -270,3 +278,32 @@ class UserGoogleCallBack(generics.GenericAPIView):
             response['user'] = user_json
 
         return Response(response, status=status.HTTP_200_OK)
+
+class UserWaitingList(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        user_data = request.data
+        print("model_data", user_data)
+        try:
+            email_validator = EmailValidator()
+            email_validator(user_data['email'])
+            user = WaitingList.objects.get(email=user_data['email'])
+            if user:
+                return Response(
+                    {"message": "User already exist! "},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except:
+            serializer = WaitingListSerializer(data=user_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {"message": "You have successfully joined Waitinglist "},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"message": "Enter valid data", "errors": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )

@@ -9,6 +9,10 @@ from django.db.models.signals import post_save
 from email_service.services import send_email_and_generate_token
 # Create your models here.
 
+class WaitingList(models.Model):
+    first_name = models.CharField(max_length=30, null=False)
+    last_name = models.CharField(max_length=30, null=True, blank=True)
+    email = models.EmailField(max_length=255, unique=True)
 
 class Subscription(models.Model):
     name = models.CharField(max_length=50, unique=True)

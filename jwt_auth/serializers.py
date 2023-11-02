@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
+from .models import WaitingList
 
 User = get_user_model()
 
@@ -74,3 +75,8 @@ class UserPasswordResetSerializer(serializers.Serializer):
         user = self._get_user()
         django_validate_password(password, user=user)
         return password
+
+class WaitingListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaitingList
+        fields = '__all__'

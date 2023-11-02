@@ -6,7 +6,8 @@ from .views import (
     UserEmailVerificationView,
     UserLoginView,
     UserForgotPasswordView,
-    UserGoogleCallBack
+    UserGoogleCallBack,
+    UserWaitingList
 )
 
 urlpatterns = [
@@ -22,4 +23,5 @@ urlpatterns = [
         name="verify_email",
     ),
     path("user/google-auth-callback", UserGoogleCallBack.as_view(), name="login"),
+    path("user/join-wait-list", UserWaitingList.as_view(), name="join_wait_list"),
 ]

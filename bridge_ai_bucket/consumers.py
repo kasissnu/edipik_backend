@@ -10,6 +10,8 @@ class CeleryResultConsumer(AsyncWebsocketConsumer):
     image_folder = 'bridge_ai_bucket/assets'
     image_path = os.path.abspath(os.path.join(
         os.path.dirname(__name__), image_folder))
+    
+    print("image_path******", image_path)
 
     async def connect(self):
         print("connected...")
@@ -23,16 +25,18 @@ class CeleryResultConsumer(AsyncWebsocketConsumer):
         files = data["uploadFiles"]
 
         for file_key_one in files:
+            print("inside loop")
             file_key = f"{folderName}/{file_key_one}"
             os.chmod(self.image_path, 0o777)
 
             # Download the file from AWS S3
             local_file_path = f'{self.image_path}/{file_key.split("/")[-1]}'
+            print("processing result..")
 
             # Process the image using your AI module
             result = process_image_with_ai.apply(args=[local_file_path, file_key, folderName]
                                                  )
-            # print(result)
+            print("result..", result)
             task_id = result.id
 
             print(task_id)
