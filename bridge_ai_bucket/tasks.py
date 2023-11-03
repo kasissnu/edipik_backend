@@ -4,31 +4,39 @@ from .ai_image_editing.main import get_enhanced_image
 import os
 from django.conf import settings
 import boto3
+import io
+import zipfile
 
 
 @shared_task(bind=True)
-def process_image_with_ai(self, image, filename, folderName):
+def process_image_with_ai(self, image, filename, folderName, zip_file):
     s3 = boto3.client('s3')
 
     try:
         download_large_file(s3,
             settings.BUCKET_NAME, filename, image)
-        print("downloaded image......")
     except Exception as e:
         print(f"Failed to download {filename}: {e}")
         self.update_state(state=states.FAILURE, meta={
                           'result': 'failed', 'message': str(e)})
         return {'status': 'failed', 'message': f"Failed to upload enhanced image for {filename}: {e}"}
+    
+    try:
+        enhanced_image_name = f"enhanced-{os.path.basename(filename)}"
+        out_dir = 'bridge_ai_bucket/ai_image_editing/temp_output'
+        enhanced_image_path = get_enhanced_image(image, enhanced_image_name, out_dir)
+        enhanced_image_key = f"{folderName}/{enhanced_image_name}"
+    except Exception as e:
+        print(f"Failed to get enhanced image for {filename}: {e}")
 
-    enhanced_image_name = f"enhanced-{os.path.basename(filename)}"
-    out_dir = 'bridge_ai_bucket/ai_image_editing/temp_output'
-    enhanced_image_path = get_enhanced_image(image, enhanced_image_name, out_dir)
-    enhanced_image_key = f"{folderName}/{enhanced_image_name}"
+    try:
+        zip_file.write(enhanced_image_path, arcname=os.path.basename(enhanced_image_path))
+    except Exception as e:
+        print(f"Failed to write to zip file for {filename}: {e}")
 
     try:
         s3.upload_file(enhanced_image_path,
                        settings.BUCKET_NAME, enhanced_image_key, Callback=upload_callback_wrapper(image, enhanced_image_path))
-        print("uploaded image....")
     except Exception as e:
         print(f"Failed to upload enhanced image for {filename}: {e}")
         self.update_state(state=states.FAILURE, meta={

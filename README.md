@@ -1,11 +1,23 @@
 # Photo-editing-ai-be
 
-Installation Description
+# Dependencies
+    python==3.7
+    Django rest==3.14
+    Celery
+    Web socket
+    channel
+    Aws (boto client)==1.23.10
+    Google authentication
 
-Django
 
-Django Rest framework
+# Virtualenv modules installation 
 
+    python3.7 -m venv venv
+    source venv/bin/activate
+
+# Install requirements
+
+    pip install -r requirements.txt
 
 # Production Server
 
@@ -14,16 +26,16 @@ For Celery Setup local Redis server
 
 # For Local setup
 
-Venv:
+<!-- Venv:
 
-    python3 -m venv venv
-    source /opt/data/django/photo-editing-ai-be/venv/bin/activate
-
+    python3.7 -m venv venv
+    source venv/bin/activate -->
 
 Django:
 
     python3 manage.py makemigrations;
     python3 manage.py migrate;
+    python3 manage.py loaddata subscriptions.json;
     python3 manage.py runserver;
 
 
