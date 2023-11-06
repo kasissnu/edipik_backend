@@ -57,3 +57,6 @@ Daphne:
 We use hypercorn for run application which support asgi functionality
 
     hypercorn photo_editing_ai.asgi:application --reload
+
+Note:
+Ensure that image file names don't contain spaces as it will not work.
