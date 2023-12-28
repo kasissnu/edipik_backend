@@ -17,6 +17,9 @@ db.sqlite3
 db.sqlite3-journal
 media
 
+# mask file
+mask_rcnn_coco.h5
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
