@@ -1,0 +1,13 @@
+[Unit]
+Description=daphne server script for my project
+After=network.target
+
+[Service]
+User=kishan
+Group=kishan
+WorkingDirectory=/home/kishan/Documents/edipk/edipik_backend/
+ExecStart=/bin/bash -c "cd /home/kishan/Documents/edipk/edipik_backend/ && source venv/bin/activate && daphne -b 0.0.0.0 -p 8000 photo_editing_ai.asgi:application"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
